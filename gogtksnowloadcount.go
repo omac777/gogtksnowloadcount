@@ -3,7 +3,193 @@ package main
 import (
 	"os"
 	"github.com/mattn/go-gtk/gtk"	
+	"time"
+	"container/list"
+	"fmt"
 )
+
+const SHIFTSTARTTIME = string("shiftstarttime")
+const SHIFTENDTIME = string("shiftendtime")
+const SHIFTSTARTDATE = string("shiftstartdate")
+const GUARDNAME = string("guardname")
+const LICENSENUMBER = string("licensenumber")
+const SHIFTCOMMENT = string("shiftcomment")
+const COUNTLOCATION = string("countlocation")
+const COUNTFORITEMTYPE = string("countforitemtype")
+const SINGLEAXLE = string("singleaxle")
+const TANDEMAXLE = string("tandem2axle")
+const TRIPLEAXLE = string("tripleaxle")
+const COMBOTRUCK = string("combotruck")
+const SEMITRAILER = string("semitrailer")
+
+type SNLDB struct {
+	snlMap map[string]string
+	singleL *list.List //single axle date/time-stamps
+	tandemL *list.List //tandem axle date/time-stamps
+	tripleL *list.List //triple axle date/time-stamps
+	comboL *list.List //combo truck date/time-stamps
+	semiL *list.List //semi-trailer date/time-stamps
+}
+
+func NewSNLDB() *SNLDB {
+	f := SNLDB{}
+	f.snlMap = make(map[string]string)
+	f.singleL = new(list.List)
+	f.tandemL = new(list.List)
+	f.tripleL = new(list.List)
+	f.comboL = new(list.List)
+	f.semiL = new(list.List)
+	return &f
+}
+
+func (s *SNLDB) testSetAndGetDataFields() {
+	s.setShiftStartTime("b");
+	s.setShiftEndTime("c");
+	s.setShiftStartDate("d");
+	s.setGuardName("e");
+	s.setLicenseNumber("f");
+	s.setShiftComment("g");
+	s.setCountLocation("h");
+	s.setCountForItemType("i");
+	s.singleAxleArrived();
+	s.tandemAxleArrived();
+	s.tandemAxleArrived();
+	s.tripleAxleArrived();
+	s.tripleAxleArrived();
+	s.tripleAxleArrived();
+	s.comboTruckArrived();
+	s.comboTruckArrived();
+	s.comboTruckArrived();
+	s.comboTruckArrived();
+	s.semiTrailerArrived();
+	s.semiTrailerArrived();
+	s.semiTrailerArrived();
+	s.semiTrailerArrived();
+	s.semiTrailerArrived();
+	fmt.Printf("%v\n", s.getShiftStartTime())
+	fmt.Printf("%v\n", s.getShiftEndTime())
+	fmt.Printf("%v\n", s.getShiftStartDate())
+	fmt.Printf("%v\n", s.getGuardName())
+	fmt.Printf("%v\n", s.getLicenseNumber())
+	fmt.Printf("%v\n", s.getShiftComment())
+	fmt.Printf("%v\n", s.getCountLocation())
+	fmt.Printf("%v\n", s.getCountForItemType())
+	fmt.Printf("single total: %v\n", s.getSingleAxleTotal())
+	fmt.Printf("tandem total: %v\n", s.getTandemAxleTotal())
+	fmt.Printf("triple total: %v\n", s.getTripleAxleTotal())
+	fmt.Printf("combo total: %v\n" , s.getComboTruckTotal())
+	fmt.Printf("semi total: %v\n", s.getSemiTrailerTotal())
+}
+
+func (s *SNLDB) getShiftStartTime() string {
+	return string(s.snlMap[SHIFTSTARTTIME])
+}
+
+func (s *SNLDB) getShiftEndTime() string {
+	return string(s.snlMap[SHIFTENDTIME])
+}
+
+func (s *SNLDB) getShiftStartDate() string {
+	return string(s.snlMap[SHIFTSTARTDATE])
+}
+
+func (s *SNLDB) getGuardName() string {
+	return string(s.snlMap[GUARDNAME])
+}
+
+func (s *SNLDB) getLicenseNumber() string {
+	return string(s.snlMap[LICENSENUMBER])
+}
+
+func (s *SNLDB) getShiftComment() string {
+	return string(s.snlMap[SHIFTCOMMENT])
+}
+
+func (s *SNLDB) getCountLocation() string {
+	return string(s.snlMap[COUNTLOCATION])
+}
+
+func (s *SNLDB) getCountForItemType() string {
+	return string(s.snlMap[COUNTFORITEMTYPE])
+}
+
+func (s *SNLDB) setShiftStartTime(s_ string) {
+	s.snlMap[SHIFTSTARTTIME] = s_
+}
+
+func (s *SNLDB) setShiftEndTime(s_ string) {
+	s.snlMap[SHIFTENDTIME] = s_
+}
+
+func (s *SNLDB) setShiftStartDate(s_ string) {
+	s.snlMap[SHIFTSTARTDATE] = s_
+}
+
+func (s *SNLDB) setGuardName(s_ string) {
+	s.snlMap[GUARDNAME] = s_
+}
+
+func (s *SNLDB) setLicenseNumber(s_ string) {
+	s.snlMap[LICENSENUMBER] = s_
+}
+
+func (s *SNLDB) setShiftComment(s_ string) {
+	s.snlMap[SHIFTCOMMENT] = s_
+}
+
+func (s *SNLDB) setCountLocation(s_ string) {
+	s.snlMap[COUNTLOCATION] = s_
+}
+
+func (s *SNLDB) setCountForItemType(s_ string) {
+	s.snlMap[COUNTFORITEMTYPE] = s_
+}
+
+func (s *SNLDB) getSingleAxleTotal() int {
+	return s.singleL.Len()
+}
+
+func (s *SNLDB) getTandemAxleTotal() int {
+	return s.tandemL.Len()
+}
+
+func (s *SNLDB) getTripleAxleTotal() int {
+	return s.tripleL.Len()
+}
+
+func (s *SNLDB) getComboTruckTotal() int {
+	return s.comboL.Len()
+}
+
+func (s *SNLDB) getSemiTrailerTotal() int {
+	return s.semiL.Len()
+}
+
+func (s *SNLDB) singleAxleArrived() {
+	s.singleL.PushBack(time.Now())
+}
+
+func (s *SNLDB) tandemAxleArrived() {
+	s.tandemL.PushBack(time.Now())
+}
+
+func (s *SNLDB) tripleAxleArrived() {
+	s.tripleL.PushBack(time.Now())
+}
+
+func (s *SNLDB) comboTruckArrived() {
+	s.comboL.PushBack(time.Now())
+}
+
+func (s *SNLDB) semiTrailerArrived() {
+	s.semiL.PushBack(time.Now())
+}
+
+  // void func (s *SNLDB) save(std::string filename_);
+  // void func (s *SNLDB) clear();
+  // void func (s *SNLDB) load(std::string filename_);
+
+
 
 type specialAssistant struct {
 	// bool isLoadedReport;
@@ -218,6 +404,12 @@ func (sa *specialAssistant) newPage4() {
 }
 
 func main() {
+	// var t2 time.Time
+	// t2 = time.Now()
+	// fmt.Printf("%v\n", t2)
+	var myS *SNLDB
+	myS = NewSNLDB()
+	myS.testSetAndGetDataFields()
 	gtk.Init(&os.Args)
 	myspecialAssistant := specialAssistant{}
 	myspecialAssistant.v = gtk.NewAssistant()
