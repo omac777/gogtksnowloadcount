@@ -185,11 +185,20 @@ func (s *SNLDB) semiTrailerArrived() {
 	s.semiL.PushBack(time.Now())
 }
 
-  // void func (s *SNLDB) save(std::string filename_);
-  // void func (s *SNLDB) clear();
-  // void func (s *SNLDB) load(std::string filename_);
+func (s *SNLDB) save(filename_ string) {
+}
 
+func (s *SNLDB) clear() {
+	s.snlMap = make(map[string]string)
+	s.singleL = new(list.List)
+	s.tandemL = new(list.List)
+	s.tripleL = new(list.List)
+	s.comboL = new(list.List)
+	s.semiL = new(list.List)
+}
 
+func (s *SNLDB) load(filename_ string) {
+}
 
 type specialAssistant struct {
 	// bool isLoadedReport;
@@ -404,9 +413,6 @@ func (sa *specialAssistant) newPage4() {
 }
 
 func main() {
-	// var t2 time.Time
-	// t2 = time.Now()
-	// fmt.Printf("%v\n", t2)
 	var myS *SNLDB
 	myS = NewSNLDB()
 	myS.testSetAndGetDataFields()
