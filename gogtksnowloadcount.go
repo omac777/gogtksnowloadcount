@@ -560,7 +560,41 @@ func (sa *specialAssistant) close_clicked () {
 	sa._snldb.debugDataFields()
 	//snldb struct's marshalling hasn't been implemented yet
 	//so this function is still a buggy skeleton
-	sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
+	b, err := json.Marshal(sa._snldb.snlMap)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+
+	b, err = json.Marshal(*sa._snldb.singleL)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+	b, err = json.Marshal(*sa._snldb.tandemL)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+	b, err = json.Marshal(*sa._snldb.tripleL)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+	b, err = json.Marshal(*sa._snldb.comboL)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+	b, err = json.Marshal(*sa._snldb.semiL)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
+	
+
+
+	//sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
 	gtk.MainQuit()
 }
 
