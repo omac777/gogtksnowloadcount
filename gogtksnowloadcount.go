@@ -6,6 +6,11 @@ import (
 	"time"
 	"container/list"
 	"fmt"
+	"bufio"
+	"io"
+	"log"
+	"encoding/json"
+	"strconv"
 )
 
 const SHIFTSTARTTIME = string("shiftstarttime")
@@ -66,6 +71,22 @@ func (s *SNLDB) testSetAndGetDataFields() {
 	s.semiTrailerArrived();
 	s.semiTrailerArrived();
 	s.semiTrailerArrived();
+	fmt.Printf("%v\n", s.getShiftStartTime())
+	fmt.Printf("%v\n", s.getShiftEndTime())
+	fmt.Printf("%v\n", s.getShiftStartDate())
+	fmt.Printf("%v\n", s.getGuardName())
+	fmt.Printf("%v\n", s.getLicenseNumber())
+	fmt.Printf("%v\n", s.getShiftComment())
+	fmt.Printf("%v\n", s.getCountLocation())
+	fmt.Printf("%v\n", s.getCountForItemType())
+	fmt.Printf("single total: %v\n", s.getSingleAxleTotal())
+	fmt.Printf("tandem total: %v\n", s.getTandemAxleTotal())
+	fmt.Printf("triple total: %v\n", s.getTripleAxleTotal())
+	fmt.Printf("combo total: %v\n" , s.getComboTruckTotal())
+	fmt.Printf("semi total: %v\n", s.getSemiTrailerTotal())
+}
+
+func (s *SNLDB) debugDataFields() {
 	fmt.Printf("%v\n", s.getShiftStartTime())
 	fmt.Printf("%v\n", s.getShiftEndTime())
 	fmt.Printf("%v\n", s.getShiftStartDate())
@@ -185,9 +206,6 @@ func (s *SNLDB) semiTrailerArrived() {
 	s.semiL.PushBack(time.Now())
 }
 
-func (s *SNLDB) save(filename_ string) {
-}
-
 func (s *SNLDB) clear() {
 	s.snlMap = make(map[string]string)
 	s.singleL = new(list.List)
@@ -197,13 +215,11 @@ func (s *SNLDB) clear() {
 	s.semiL = new(list.List)
 }
 
-func (s *SNLDB) load(filename_ string) {
-}
-
 type specialAssistant struct {
 	// bool isLoadedReport;
 	// std::string loadedReportFilename;
 	v *gtk.Assistant
+	_snldb *SNLDB
 
 	//fields for page1
 	page1frame *gtk.Frame
@@ -380,7 +396,27 @@ func (sa *specialAssistant) newPage4() {
 	sa.tripleaxlebutton = gtk.NewButtonWithLabel("tripleaxle")
 	sa.combotruckbutton = gtk.NewButtonWithLabel("combotruck")
 	sa.semitrailerbutton = gtk.NewButtonWithLabel("semitrailer")
-
+	sa.singleaxlebutton.Clicked(func() {
+		sa._snldb.singleAxleArrived()
+		sa.singleLabel.SetText(strconv.Itoa(sa._snldb.getSingleAxleTotal()));
+	})	
+	sa.tandemaxlebutton.Clicked(func() {
+		sa._snldb.tandemAxleArrived()
+		sa.tandemLabel.SetText(strconv.Itoa(sa._snldb.getTandemAxleTotal()));
+	})	
+	sa.tripleaxlebutton.Clicked(func() {
+		sa._snldb.tripleAxleArrived()
+		sa.tripleLabel.SetText(strconv.Itoa(sa._snldb.getTripleAxleTotal()));
+	})	
+	sa.combotruckbutton.Clicked(func() {
+		sa._snldb.comboTruckArrived()
+		sa.comboLabel.SetText(strconv.Itoa(sa._snldb.getComboTruckTotal()));
+	})	
+	sa.semitrailerbutton.Clicked(func() {
+		sa._snldb.semiTrailerArrived()
+		sa.semiLabel.SetText(strconv.Itoa(sa._snldb.getSemiTrailerTotal()));
+	})	
+	
 	sa.singleLabel = gtk.NewLabel("0")
 	sa.tandemLabel = gtk.NewLabel("0")
 	sa.tripleLabel = gtk.NewLabel("0")
@@ -412,19 +448,147 @@ func (sa *specialAssistant) newPage4() {
 	sa.v.SetPageComplete(sa.page4frame, true)
 }
 
+//snldb struct's marshalling hasn't been implemented yet
+//so this function is still a buggy skeleton
+func (sa *specialAssistant) saveJsonFileSNLDB(myFileName string, mySNLDB *SNLDB) () {
+	fo, err := os.Create(myFileName)
+	if err != nil { panic(err) }
+	defer fo.Close()
+	w := bufio.NewWriter(fo)
+	jsonBytes, err := json.Marshal(mySNLDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = w.Write(jsonBytes) 
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = w.Flush(); err != nil { 
+		log.Fatal(err) 
+	}
+}
+
+//snldb struct's marshalling hasn't been implemented yet
+//so this function is still a buggy skeleton
+func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (SNLDB) {
+	//var myS *SNLDB
+	//myS = NewSNLDB()
+	var myTestSNLDB SNLDB
+	input, err := os.Open(myFileName)
+	if err != nil {
+	  	log.Fatal(err)
+	}
+        myjsondecoder := json.NewDecoder(input)
+	for {
+	 	err := myjsondecoder.Decode(&myTestSNLDB)
+	 	if err != nil {
+	  		if err == io.EOF {
+	  			break
+	  		}
+	  		log.Fatal(err)
+	  	}
+	}
+	return myTestSNLDB
+}
+
+func (sa *specialAssistant) apply_clicked () {
+	println("assistant apply clicked page:", sa.v.GetCurrentPage())
+	var whichPage int
+	whichPage = sa.v.GetCurrentPage()
+	switch (whichPage) {
+	case 0:
+		sa._snldb.setShiftStartTime(sa.shiftStartTimeEntry.GetText());
+		sa._snldb.setShiftEndTime(sa.shiftEndTimeEntry.GetText());
+		sa._snldb.setShiftStartDate(sa.shiftStartDateEntry.GetText());
+		sa._snldb.setGuardName(sa.guardNameEntry.GetText());
+		sa._snldb.setLicenseNumber(sa.guardLicenceNumberEntry.GetText());
+		sa._snldb.setShiftComment(sa.guardShiftCommentsEntry.GetText());
+		break;
+	case 1:
+		sa._snldb.setCountLocation(sa.getCountLocation());
+		break;
+	case 2:
+		sa._snldb.setCountForItemType(sa.getCountForItemType());
+		break;
+	case 3:
+		break;
+	default:
+		break;
+	}	
+}
+
+func (sa *specialAssistant) getCountLocation() string {
+	var selectedRadio string
+	if(sa.conroyRadio.GetActive()) {
+		selectedRadio = sa.conroyRadio.GetLabel()
+	}
+
+	if(sa.michaelRadio.GetActive()) {
+		selectedRadio = sa.michaelRadio.GetLabel()
+	}
+
+	if(sa.strandherdRadio.GetActive()) {
+		selectedRadio = sa.strandherdRadio.GetLabel()
+	}
+
+	if(sa.innesRadio.GetActive()) {
+		selectedRadio = sa.innesRadio.GetLabel()
+	}
+
+	if(sa.clydeRadio.GetActive()) {
+		selectedRadio = sa.clydeRadio.GetLabel()
+	}
+	return selectedRadio
+}
+
+func (sa *specialAssistant) getCountForItemType() string {
+	var selectedRadio string  
+	if(sa.passesRadio.GetActive()) {
+		selectedRadio = sa.passesRadio.GetLabel()
+	}
+
+	if(sa.ticketsRadio.GetActive()) {
+		selectedRadio = sa.ticketsRadio.GetLabel()
+	}
+
+	return selectedRadio
+}
+
+
+func (sa *specialAssistant) close_clicked () {
+	println("assistant close clicked page:", sa.v.GetCurrentPage())
+	sa._snldb.debugDataFields()
+	//snldb struct's marshalling hasn't been implemented yet
+	//so this function is still a buggy skeleton
+	sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
+	gtk.MainQuit()
+}
+
+func (sa *specialAssistant) cancel_clicked () {
+	println("assistant cancel clicked page:", sa.v.GetCurrentPage())
+}
+
+func (sa *specialAssistant) prepare_clicked () {
+	println("assistant prepare clicked page:", sa.v.GetCurrentPage())
+}
+
 func main() {
-	var myS *SNLDB
-	myS = NewSNLDB()
-	myS.testSetAndGetDataFields()
 	gtk.Init(&os.Args)
 	myspecialAssistant := specialAssistant{}
+	myspecialAssistant._snldb = NewSNLDB()
+	myspecialAssistant._snldb.testSetAndGetDataFields()
+	myspecialAssistant._snldb.clear()
 	myspecialAssistant.v = gtk.NewAssistant()
 	myspecialAssistant.newPage4()
 	myspecialAssistant.newPage3()
         myspecialAssistant.newPage2()
 	myspecialAssistant.newPage1()
-	myspecialAssistant.v.Connect("cancel", gtk.MainQuit)
-	myspecialAssistant.v.Connect("close", gtk.MainQuit)
+
+	myspecialAssistant.v.Connect("apply", myspecialAssistant.apply_clicked)
+	myspecialAssistant.v.Connect("cancel", myspecialAssistant.cancel_clicked)
+	myspecialAssistant.v.Connect("close", myspecialAssistant.close_clicked)
+	myspecialAssistant.v.Connect("prepare", myspecialAssistant.prepare_clicked)
+
 	myspecialAssistant.v.SetSizeRequest(640, 480)
 	myspecialAssistant.v.ShowAll()
 	gtk.Main()
