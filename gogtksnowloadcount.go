@@ -4,10 +4,11 @@ import (
 	"os"
 	"github.com/mattn/go-gtk/gtk"	
 	"time"
-	"container/list"
+	//"container/list"
 	"fmt"
 	"bufio"
-	"io"
+	//"io"
+	"io/ioutil"
 	"log"
 	"encoding/json"
 	"strconv"
@@ -29,21 +30,33 @@ const SEMITRAILER = string("semitrailer")
 
 type SNLDB struct {
 	snlMap map[string]string
-	singleL *list.List //single axle date/time-stamps
-	tandemL *list.List //tandem axle date/time-stamps
-	tripleL *list.List //triple axle date/time-stamps
-	comboL *list.List //combo truck date/time-stamps
-	semiL *list.List //semi-trailer date/time-stamps
+	singleL []time.Time //single axle date/time-stamps
+	tandemL []time.Time //tandem axle date/time-stamps
+	tripleL []time.Time //triple axle date/time-stamps
+	comboL []time.Time //combo truck date/time-stamps
+	semiL []time.Time //semi-trailer date/time-stamps
+
+	// singleL *list.List //single axle date/time-stamps
+	// tandemL *list.List //tandem axle date/time-stamps
+	// tripleL *list.List //triple axle date/time-stamps
+	// comboL *list.List //combo truck date/time-stamps
+	// semiL *list.List //semi-trailer date/time-stamps
 }
 
 func NewSNLDB() *SNLDB {
 	f := SNLDB{}
 	f.snlMap = make(map[string]string)
-	f.singleL = new(list.List)
-	f.tandemL = new(list.List)
-	f.tripleL = new(list.List)
-	f.comboL = new(list.List)
-	f.semiL = new(list.List)
+	f.singleL = make([]time.Time, 0, 200) //average maximum number trucks counted in one night
+	f.tandemL = make([]time.Time, 0, 200)
+	f.tripleL = make([]time.Time, 0, 200)
+	f.comboL = make([]time.Time, 0, 200)
+	f.semiL = make([]time.Time, 0, 200)
+
+	// f.singleL = new(list.List)
+	// f.tandemL = new(list.List)
+	// f.tripleL = new(list.List)
+	// f.comboL = new(list.List)
+	// f.semiL = new(list.List)
 	return &f
 }
 
@@ -167,52 +180,119 @@ func (s *SNLDB) setCountForItemType(s_ string) {
 }
 
 func (s *SNLDB) getSingleAxleTotal() int {
-	return s.singleL.Len()
+	return len(s.singleL)
 }
 
 func (s *SNLDB) getTandemAxleTotal() int {
-	return s.tandemL.Len()
+	return len(s.tandemL)
 }
 
 func (s *SNLDB) getTripleAxleTotal() int {
-	return s.tripleL.Len()
+	return len(s.tripleL)
 }
 
 func (s *SNLDB) getComboTruckTotal() int {
-	return s.comboL.Len()
+	return len(s.comboL)
 }
 
 func (s *SNLDB) getSemiTrailerTotal() int {
-	return s.semiL.Len()
+	return len(s.semiL)
 }
 
 func (s *SNLDB) singleAxleArrived() {
-	s.singleL.PushBack(time.Now())
+	//s.singleL.PushBack(time.Now())
+	s.singleL = append(s.singleL, time.Now())
+	// l := len(s.singleL)
+	// c := cap(s.singleL)
+	// if (l < c) {
+	// 	if(l == 0) {
+	// 		s.singleL[0]= time.Now()
+	// 	} else {
+	// 		s.singleL[l-1]= time.Now()			
+	// 	}
+	// } else {
+	// 	s.singleL = append(s.singleL, time.Now())
+	// }
 }
 
 func (s *SNLDB) tandemAxleArrived() {
-	s.tandemL.PushBack(time.Now())
+	//s.tandemL.PushBack(time.Now())
+	s.tandemL = append(s.tandemL, time.Now())
+	// l := len(s.tandemL)
+	// c := cap(s.tandemL)
+	// if (l < c) {
+	// 	if(l == 0) {
+	// 		s.tandemL[0]= time.Now()
+	// 	} else {
+	// 		s.tandemL[l-1]= time.Now()			
+	// 	}
+	// } else {
+	// 	s.tandemL = append(s.tandemL, time.Now())
+	// }
 }
 
 func (s *SNLDB) tripleAxleArrived() {
-	s.tripleL.PushBack(time.Now())
+	//s.tripleL.PushBack(time.Now())
+	s.tripleL = append(s.tripleL, time.Now())	
+	// l := len(s.tripleL)
+	// c := cap(s.tripleL)
+	// if (l < c) {
+	// 	if(l == 0) {
+	// 		s.tripleL[0]= time.Now()
+	// 	} else {
+	// 		s.tripleL[l-1]= time.Now()			
+	// 	}
+	// } else {
+	// 	s.tripleL = append(s.tripleL, time.Now())
+	// }
 }
 
 func (s *SNLDB) comboTruckArrived() {
-	s.comboL.PushBack(time.Now())
+	//s.comboL.PushBack(time.Now())
+	s.comboL = append(s.comboL, time.Now())	
+	// l := len(s.comboL)
+	// c := cap(s.comboL)
+	// if (l < c) {
+	// 	if(l == 0) {
+	// 		s.comboL[0]= time.Now()
+	// 	} else {
+	// 		s.comboL[l-1]= time.Now()			
+	// 	}
+	// } else {
+	// 	s.comboL = append(s.comboL, time.Now())
+	// }
+
 }
 
 func (s *SNLDB) semiTrailerArrived() {
-	s.semiL.PushBack(time.Now())
+	//s.semiL.PushBack(time.Now())
+	s.semiL = append(s.semiL, time.Now())	
+	// l := len(s.semiL)
+	// c := cap(s.semiL)
+	// if (l < c) {
+	// 	if(l == 0) {
+	// 		s.semiL[0]= time.Now()
+	// 	} else {
+	// 		s.semiL[l-1]= time.Now()			
+	// 	}
+	// } else {
+	// 	s.semiL = append(s.semiL, time.Now())
+	// }
 }
 
 func (s *SNLDB) clear() {
 	s.snlMap = make(map[string]string)
-	s.singleL = new(list.List)
-	s.tandemL = new(list.List)
-	s.tripleL = new(list.List)
-	s.comboL = new(list.List)
-	s.semiL = new(list.List)
+	s.singleL = make([]time.Time, 0, 200) //average maximum number trucks counted in one night
+	s.tandemL = make([]time.Time, 0, 200)
+	s.tripleL = make([]time.Time, 0, 200)
+	s.comboL = make([]time.Time, 0, 200)
+	s.semiL = make([]time.Time, 0, 200)
+
+	// s.singleL = new(list.List)
+	// s.tandemL = new(list.List)
+	// s.tripleL = new(list.List)
+	// s.comboL = new(list.List)
+	// s.semiL = new(list.List)
 }
 
 type specialAssistant struct {
@@ -450,12 +530,21 @@ func (sa *specialAssistant) newPage4() {
 
 //snldb struct's marshalling hasn't been implemented yet
 //so this function is still a buggy skeleton
-func (sa *specialAssistant) saveJsonFileSNLDB(myFileName string, mySNLDB *SNLDB) () {
+func (sa *specialAssistant) saveJsonFileSNLDB(myFileName string, f *SNLDB) () {
 	fo, err := os.Create(myFileName)
 	if err != nil { panic(err) }
 	defer fo.Close()
 	w := bufio.NewWriter(fo)
-	jsonBytes, err := json.Marshal(mySNLDB)
+	//jsonBytes, err := json.Marshal(mySNLDB)
+	jsonBytes, err := json.Marshal([]interface{}{
+		f.snlMap,
+		f.singleL,
+		f.tandemL,
+		f.tripleL,
+		f.comboL,
+		f.semiL,
+	})
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -470,24 +559,65 @@ func (sa *specialAssistant) saveJsonFileSNLDB(myFileName string, mySNLDB *SNLDB)
 
 //snldb struct's marshalling hasn't been implemented yet
 //so this function is still a buggy skeleton
+type A struct {
+	A map[string]string
+}
+
+type B struct {
+	B []time.Time
+}
+	
+type C struct {
+	C []time.Time
+}
+
+type D struct {
+	D []time.Time
+}
+
+type E struct {
+	E []time.Time
+}
+
+type F struct {
+	F []time.Time
+}
+
 func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (SNLDB) {
+	type Any struct {
+	 	*A
+	 	*B
+	 	*C
+	 	*D
+	 	*E
+	 	*F
+	}
+	var res []Any
+	
 	//var myS *SNLDB
 	//myS = NewSNLDB()
 	var myTestSNLDB SNLDB
-	input, err := os.Open(myFileName)
-	if err != nil {
-	  	log.Fatal(err)
-	}
-        myjsondecoder := json.NewDecoder(input)
-	for {
-	 	err := myjsondecoder.Decode(&myTestSNLDB)
-	 	if err != nil {
-	  		if err == io.EOF {
-	  			break
-	  		}
-	  		log.Fatal(err)
-	  	}
-	}
+	// input, err := os.Open(myFileName)
+	// if err != nil {
+	//   	log.Fatal(err)
+	// }
+
+	file, err2 := ioutil.ReadFile(myFileName)
+	fmt.Printf("thefilecontents:", file)
+	err := json.Unmarshal(file, &res)
+	fmt.Printf("Results: %v\n", res, err, err2)
+
+	//err = json.Unmarshal(data, &res)
+        // myjsondecoder := json.NewDecoder(input)
+	// for {
+	//  	err := myjsondecoder.Decode(&myTestSNLDB)
+	//  	if err != nil {
+	//   		if err == io.EOF {
+	//   			break
+	//   		}
+	//   		log.Fatal(err)
+	//   	}
+	// }
 	return myTestSNLDB
 }
 
@@ -557,44 +687,43 @@ func (sa *specialAssistant) getCountForItemType() string {
 
 func (sa *specialAssistant) close_clicked () {
 	println("assistant close clicked page:", sa.v.GetCurrentPage())
-	sa._snldb.debugDataFields()
+	//sa._snldb.debugDataFields()
 	//snldb struct's marshalling hasn't been implemented yet
 	//so this function is still a buggy skeleton
-	b, err := json.Marshal(sa._snldb.snlMap)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
+	// b, err := json.Marshal(sa._snldb.snlMap)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
 
-	b, err = json.Marshal(*sa._snldb.singleL)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
-	b, err = json.Marshal(*sa._snldb.tandemL)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
-	b, err = json.Marshal(*sa._snldb.tripleL)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
-	b, err = json.Marshal(*sa._snldb.comboL)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
-	b, err = json.Marshal(*sa._snldb.semiL)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	os.Stdout.Write(b)
-	
-
-
-	//sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
+	// b, err = json.Marshal(sa._snldb.singleL)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
+	// b, err = json.Marshal(sa._snldb.tandemL)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
+	// b, err = json.Marshal(sa._snldb.tripleL)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
+	// b, err = json.Marshal(sa._snldb.comboL)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
+	// b, err = json.Marshal(sa._snldb.semiL)
+	// if err != nil {
+	// 	fmt.Println("error:", err)
+	// }
+	// os.Stdout.Write(b)
+	sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
+	tmpblah := sa.readJsonFileSNLDB("snowreport.json")
+	fmt.Println("sssssss %v\n", tmpblah)
 	gtk.MainQuit()
 }
 
@@ -627,3 +756,24 @@ func main() {
 	myspecialAssistant.v.ShowAll()
 	gtk.Main()
 }
+
+
+// type A struct {
+// 	A string
+// }
+// type B struct {
+// 	B int64
+// }
+// type C struct {
+// 	C float64
+// }
+
+// func main() {
+// 	data, err := json.Marshal([]interface{}{
+// 		A{"foo"},
+// 		B{42},
+// 		C{1.234},
+// 	})
+// 	fmt.Printf("%s %v\n", data, err)
+// 	err = json.Unmarshal(data, &res)
+// 	fmt.Printf("%+v %v\n", res, err)
