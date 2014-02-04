@@ -584,14 +584,12 @@ type F struct {
 }
 
 func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (SNLDB) {
+
 	type Any struct {
-	 	*A
-	 	*B
-	 	*C
-	 	*D
-	 	*E
-	 	*F
+		A map[string]string
+		B, C, D, E, F []time.Time
 	}
+	
 	var res []Any
 	
 	//var myS *SNLDB
