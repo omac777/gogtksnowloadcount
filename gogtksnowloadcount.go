@@ -292,6 +292,9 @@ func (sa *specialAssistant) newPage1() {
 	sa.b5 = gtk.NewHBox(false, 1)
 	sa.b6 = gtk.NewHBox(false, 1)
 	sa.openReportButton = gtk.NewButtonWithLabel("Open report")
+	//tmpblah := sa.readJsonFileSNLDB("snowreport.json")
+	//fmt.Println("after returning from readJsonFile %v\n", tmpblah)
+
 	sa.filenameEntry = gtk.NewEntry()
 	sa.shiftStartTimeLabel = gtk.NewLabel("Shift Start Time:")
 	sa.shiftStartTimeEntry = gtk.NewEntry()
@@ -552,12 +555,19 @@ func (sa *specialAssistant) getCountForItemType() string {
 	return selectedRadio
 }
 
+func (sa *specialAssistant) generateUniqueReportFilename() string {
+	var myUniqueFilename string
+	var t time.Time
+	var myIsoTime string
+	t = time.Now()
+	myIsoTime = fmt.Sprintf("%d%02d%02dT%02d%02d%02d.%09d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
+	myUniqueFilename = "snowloadcount" + myIsoTime + ".json";
+	return myUniqueFilename
+}
 
 func (sa *specialAssistant) close_clicked () {
 	println("assistant close clicked page:", sa.v.GetCurrentPage())
-	sa.saveJsonFileSNLDB("snowreport.json", sa._snldb)
-	tmpblah := sa.readJsonFileSNLDB("snowreport.json")
-	fmt.Println("after returning from readJsonFile %v\n", tmpblah)
+	sa.saveJsonFileSNLDB(sa.generateUniqueReportFilename(), sa._snldb)
 	gtk.MainQuit()
 }
 
