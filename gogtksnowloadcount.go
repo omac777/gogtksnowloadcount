@@ -220,8 +220,8 @@ func (s *SNLDB) clear() {
 }
 
 type specialAssistant struct {
-	// bool isLoadedReport;
-	// std::string loadedReportFilename;
+	isLoadedReport bool
+	loadedReportFilename string
 	v *gtk.Assistant
 	_snldb *SNLDB
 
@@ -292,9 +292,7 @@ func (sa *specialAssistant) newPage1() {
 	sa.b5 = gtk.NewHBox(false, 1)
 	sa.b6 = gtk.NewHBox(false, 1)
 	sa.openReportButton = gtk.NewButtonWithLabel("Open report")
-	//tmpblah := sa.readJsonFileSNLDB("snowreport.json")
-	//fmt.Println("after returning from readJsonFile %v\n", tmpblah)
-
+	sa.openReportButton.Connect("clicked", sa.on_openreport_clicked)
 	sa.filenameEntry = gtk.NewEntry()
 	sa.shiftStartTimeLabel = gtk.NewLabel("Shift Start Time:")
 	sa.shiftStartTimeEntry = gtk.NewEntry()
@@ -476,7 +474,7 @@ func (sa *specialAssistant) saveJsonFileSNLDB(myFileName string, f *SNLDB) () {
 	}
 }
 
-func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (SNLDB) {
+func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (*SNLDB) {
 	file, err2 := ioutil.ReadFile(myFileName)
 	if err2 != nil {
 	   	log.Fatal(err2)
@@ -489,7 +487,7 @@ func (sa *specialAssistant) readJsonFileSNLDB(myFileName string) (SNLDB) {
 	   	log.Fatal(err3)
 	}
  	//fmt.Printf("Read Results: %+v %v\n", res, err3)
-	return res
+	return &res
 }
 
 func (sa *specialAssistant) apply_clicked () {
@@ -573,18 +571,101 @@ func (sa *specialAssistant) close_clicked () {
 
 func (sa *specialAssistant) cancel_clicked () {
 	println("assistant cancel clicked page:", sa.v.GetCurrentPage())
+	gtk.MainQuit()
 }
 
 func (sa *specialAssistant) prepare_clicked () {
 	println("assistant prepare clicked page:", sa.v.GetCurrentPage())
 }
 
+func (sa *specialAssistant) openReport(filename_ string) {
+	sa._snldb = sa.readJsonFileSNLDB(filename_)
+	sa.isLoadedReport = true
+	sa.loadedReportFilename = filename_
+	sa.loadReportDataIntoGui()
+}
+
+func (sa *specialAssistant) loadReportDataIntoGui() {
+  sa.shiftStartTimeEntry.SetText(sa._snldb.getShiftStartTime())
+  sa.shiftEndTimeEntry.SetText(sa._snldb.getShiftEndTime())
+  sa.shiftStartDateEntry.SetText(sa._snldb.getShiftStartDate())
+  sa.guardNameEntry.SetText(sa._snldb.getGuardName())
+  sa.guardLicenceNumberEntry.SetText(sa._snldb.getLicenseNumber())
+  sa.guardShiftCommentsEntry.SetText(sa._snldb.getShiftComment())
+  sa.setActiveCountLocation(sa._snldb.getCountLocation())
+  sa.setActiveCountForItemType(sa._snldb.getCountForItemType())
+  sa.SingleLabel.SetText(strconv.Itoa(sa._snldb.getSingleAxleTotal()))
+  sa.TandemLabel.SetText(strconv.Itoa(sa._snldb.getTandemAxleTotal()))
+  sa.TripleLabel.SetText(strconv.Itoa(sa._snldb.getTripleAxleTotal()))
+  sa.ComboLabel.SetText(strconv.Itoa(sa._snldb.getComboTruckTotal()))
+  sa.SemiLabel.SetText(strconv.Itoa(sa._snldb.getSemiTrailerTotal()))
+
+  // disable all the fields after filling them/changing them while in loaded report mode.
+  sa.shiftStartTimeEntry.SetSensitive(false)
+  sa.shiftEndTimeEntry.SetSensitive(false)
+  sa.shiftStartDateEntry.SetSensitive(false)
+  sa.guardNameEntry.SetSensitive(false)
+  sa.guardLicenceNumberEntry.SetSensitive(false)
+  sa.guardShiftCommentsEntry.SetSensitive(false)
+  
+  sa.conroyRadio.SetSensitive(false)
+  sa.michaelRadio.SetSensitive(false)
+  sa.strandherdRadio.SetSensitive(false)
+  sa.innesRadio.SetSensitive(false)
+  sa.clydeRadio.SetSensitive(false)
+  
+  sa.passesRadio.SetSensitive(false)
+  sa.ticketsRadio.SetSensitive(false)
+
+  sa.singleaxlebutton.SetSensitive(false)
+  sa.tandemaxlebutton.SetSensitive(false)
+  sa.tripleaxlebutton.SetSensitive(false)
+  sa.combotruckbutton.SetSensitive(false)
+  sa.semitrailerbutton.SetSensitive(false)
+}
+
+func (sa *specialAssistant) setActiveCountLocation(countLocation_ string) {
+	if( countLocation_ == "Conroy") {
+		sa.conroyRadio.SetActive(true)
+	}
+	
+	if ( countLocation_ == "Micheal") {
+		sa.michaelRadio.SetActive(true)
+	}
+	
+	if ( countLocation_ == "Strandherd") {
+		sa.strandherdRadio.SetActive(true)
+	}
+	
+	if ( countLocation_ == "Innes") {
+		sa.innesRadio.SetActive(true)
+	}
+	
+	if (countLocation_ == "Clyde") {
+		sa.clydeRadio.SetActive(true)
+	}
+}
+
+func (sa *specialAssistant) setActiveCountForItemType(countForItemType_ string) {
+	if(countForItemType_ == "Passes") {
+		sa.passesRadio.SetActive(true)
+	}
+	
+	if(countForItemType_ == "Tickets") {
+		sa.ticketsRadio.SetActive(true)
+	}
+}
+
+func (sa *specialAssistant) on_openreport_clicked() {
+	sa.openReport(sa.filenameEntry.GetText())
+}
+
 func main() {
 	gtk.Init(&os.Args)
 	myspecialAssistant := specialAssistant{}
 	myspecialAssistant._snldb = NewSNLDB()
-	myspecialAssistant._snldb.testSetAndGetDataFields()
-	myspecialAssistant._snldb.clear()
+	//myspecialAssistant._snldb.testSetAndGetDataFields()
+	//myspecialAssistant._snldb.clear()
 	myspecialAssistant.v = gtk.NewAssistant()
 	myspecialAssistant.newPage4()
 	myspecialAssistant.newPage3()
